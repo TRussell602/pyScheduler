@@ -6,7 +6,8 @@ import time
 # Qt holds Qt namespace constants
 # constants so far used for color and box layout alignment
 # QSize class holds width & height ints
-from PyQt5.QtCore import Qt, QSize
+# QStringListModel contains a list of strings formatted so that a QListView can display them
+from PyQt5.QtCore import Qt, QSize, QStringListModel
 
 # QBrush used to color in selected regions
 # QPen used for drawing lines and outlines
@@ -24,12 +25,15 @@ from PyQt5.QtGui import QBrush, QPen, QColor, QFont
 # QGraphicsRectItem used for drawing rects in a QGraphicsScene
 # QPushButton is a simple button class
 # QLabel used for displaying static text
+# QLineEdit is a text field
+# QDateTimeEdit is a LineEdit specifically for getting date and time
+# QListView is a control that displays a list of items organised in a column
 from PyQt5.QtWidgets import (
     QApplication, 
     QWidget, QDialog,
     QVBoxLayout, QHBoxLayout,
     QGraphicsScene, QGraphicsView, QGraphicsLineItem, QGraphicsRectItem,
-    QPushButton, QLabel
+    QPushButton, QLabel, QLineEdit, QDateTimeEdit, QListView
 )
 
 # custom main window class used to host a QGraphicsScene, can host other controls
@@ -54,10 +58,10 @@ class MainWindow(QWidget):
         topRowBox = QHBoxLayout()
 
         # create add item/date button and add it to horizontal layout box
-        addItemButton = QPushButton("Add Item")
-        addItemButton.setFixedSize(QSize(75, 24))
-        addItemButton.clicked.connect(self.addItem)
-        topRowBox.addWidget(addItemButton, 20)
+        itemListButton = QPushButton("Item List")
+        itemListButton.setFixedSize(QSize(75, 24))
+        itemListButton.clicked.connect(self.itemList)
+        topRowBox.addWidget(itemListButton, 20)
         topRowBox.addStretch(33)
 
         # localtime() returns a struct_time object
@@ -179,15 +183,98 @@ class MainWindow(QWidget):
         # initialize window layout
         self.setLayout(vbox)
 
-    def addItem(self):
-        dlg = AddItemDlg()
+    # opens item list dialog
+    def itemList(self):
+        dlg = itemListDlg()
         dlg.exec()
 
-class AddItemDlg(QDialog):
+class itemListDlg(QDialog):
     def __init__(self):
-        super().__init__()
-        self.setWindowTitle("Add Item")
+        super().__init__() # import base class members
+
+        # set dialog caption and dims
+        self.setWindowTitle("Item List")
         self.setFixedSize(481, 356)
+
+        # create local horizontal layout
+        itemListVBox = QVBoxLayout(self)
+
+        # create add items button
+        addItemButton = QPushButton("Add Items")
+        addItemButton.setFixedSize(QSize(75, 24))
+        addItemButton.clicked.connect(self.addItems)
+
+        # preset string list model for demonstrating the QListView
+        strings = ("Junk Class Name : 2026/10/26 12:00AM : This is one possible format", 
+                   "Class : Date/Time : Comment",
+                   "We could always use a different delimeter (; , - |)")
+        listModel = QStringListModel(strings)
+
+        # init item listview
+        itemList = QListView()
+        itemList.setModel(listModel)
+
+        # init dialog display
+        itemListVBox.addWidget(addItemButton)
+        itemListVBox.addWidget(itemList)
+        self.setLayout(itemListVBox)
+
+    # opens add items dialog
+    def addItems(self):
+        addItems = AddItemsDlg()
+        addItems.exec()
+
+class AddItemsDlg(QDialog):
+    def __init__(self):
+        super().__init__() # inherit base class members
+
+        # init dialog caption and dims
+        self.setWindowTitle("Add Item")
+        self.setFixedSize(QSize(350, 336))
+
+        # create main dialog layout box
+        mainLayout = QHBoxLayout(self)
+
+        # create column layout boxes
+        leftCol = QVBoxLayout()
+        rightCol = QVBoxLayout()
+
+        # first row
+        labelClass = QLabel("Class:")
+        labelClass.setFixedSize(QSize(150, 20))
+        leftCol.addWidget(labelClass)
+        nameField = QLineEdit()
+        nameField.setFixedSize(QSize(150, 20))
+        rightCol.addWidget(nameField)
+
+        # second row
+        labelDate = QLabel("Date:")
+        labelDate.setFixedSize(QSize(150, 20))
+        leftCol.addWidget(labelDate)
+        datePicker = QDateTimeEdit()
+        datePicker.setFixedSize(QSize(150, 20))
+        rightCol.addWidget(datePicker)
+
+        # third row
+        labelDesc = QLabel("Item Description:")
+        labelDesc.setFixedSize(QSize(150, 20))
+        leftCol.addWidget(labelDesc)
+        commentField = QLineEdit()
+        commentField.setFixedSize(QSize(150, 20))
+        rightCol.addWidget(commentField)
+
+        # fourth row
+        addItemButton = QPushButton("Add To List")
+        addItemButton.setFixedSize(QSize(150, 20))
+        leftCol.addWidget(addItemButton)
+        exitAddItem = QPushButton("Exit")
+        exitAddItem.setFixedSize(QSize(150, 20))
+        rightCol.addWidget(exitAddItem)
+
+        # init dialog layout
+        mainLayout.addLayout(leftCol)
+        mainLayout.addLayout(rightCol)
+        self.setLayout(mainLayout)
 
 # create application instance
 application = QApplication([])
