@@ -131,14 +131,17 @@ class MainWindow(QWidget):
         self.scene.addItem(dividerLine)
 
         # add vertical lines
-        for i in range(6):
-            line = QGraphicsLineItem(DAY_WIDTH + i * DAY_WIDTH, 0, DAY_WIDTH + i * DAY_WIDTH, CALENDAR_HEIGHT)
+        for i in range(8):
+            if (i != 7):
+                line = QGraphicsLineItem(i * DAY_WIDTH, 0, i * DAY_WIDTH, CALENDAR_HEIGHT)
+            else: # needs a correction of 1 here due to floating point math issue
+                line = QGraphicsLineItem(i * DAY_WIDTH + 1, 0, i * DAY_WIDTH + 1, CALENDAR_HEIGHT)
             line.setPen(pen)
             self.scene.addItem(line)
 
         # add horizontal lines
         vStart = DAY_LABEL_HEIGHT + DAY_HEIGHT
-        for i in range(4):
+        for i in range(5):
             line = QGraphicsLineItem(0, vStart + i * DAY_HEIGHT, CALENDAR_WIDTH, vStart + i * DAY_HEIGHT)
             line.setPen(pen)
             self.scene.addItem(line)
@@ -163,15 +166,18 @@ class MainWindow(QWidget):
                 weekday -= dayColumn     
 
         # add day numbers
-        dayNumX = DAY_WIDTH / 100 * 84
+        dayNumX = DAY_WIDTH / 100 * 88
         dayNumY = DAY_LABEL_HEIGHT
         numDays = self.monthNumDaysMap[currentDate.tm_mon - 1]
-        for day in range(1, numDays):
-            textItem = self.scene.addText(str(day))
+        for day in range(1, numDays + 1):
+            if (day == 10):
+                dayNumX = DAY_WIDTH / 100 * 80
+            
+            textItem = self.scene.addText(str(day), font)
             textItem.setPos(dayNumX + weekday * DAY_WIDTH, dayNumY)
+            
             if (weekday == 6):
                 weekday = 0
-                dayNumX = DAY_WIDTH / 100 * 84
                 dayNumY += DAY_HEIGHT
             else:
                 weekday += 1
@@ -185,10 +191,10 @@ class MainWindow(QWidget):
 
     # opens item list dialog
     def itemList(self):
-        dlg = itemListDlg()
-        dlg.exec()
+        self.dlg = itemListDlg()
+        self.dlg.show()
 
-class itemListDlg(QDialog):
+class itemListDlg(QWidget):
     def __init__(self):
         super().__init__() # import base class members
 
@@ -221,16 +227,16 @@ class itemListDlg(QDialog):
 
     # opens add items dialog
     def addItems(self):
-        addItems = AddItemsDlg()
-        addItems.exec()
+        self.addItems = AddItemsDlg()
+        self.addItems.show()
 
-class AddItemsDlg(QDialog):
+class AddItemsDlg(QWidget):
     def __init__(self):
         super().__init__() # inherit base class members
 
         # init dialog caption and dims
         self.setWindowTitle("Add Item")
-        self.setFixedSize(QSize(350, 336))
+        self.setFixedSize(QSize(300, 250))
 
         # create main dialog layout box
         mainLayout = QHBoxLayout(self)
@@ -241,34 +247,34 @@ class AddItemsDlg(QDialog):
 
         # first row
         labelClass = QLabel("Class:")
-        labelClass.setFixedSize(QSize(150, 20))
+        labelClass.setFixedSize(QSize(130, 20))
         leftCol.addWidget(labelClass)
         nameField = QLineEdit()
-        nameField.setFixedSize(QSize(150, 20))
+        nameField.setFixedSize(QSize(130, 20))
         rightCol.addWidget(nameField)
 
         # second row
         labelDate = QLabel("Date:")
-        labelDate.setFixedSize(QSize(150, 20))
+        labelDate.setFixedSize(QSize(130, 20))
         leftCol.addWidget(labelDate)
         datePicker = QDateTimeEdit()
-        datePicker.setFixedSize(QSize(150, 20))
+        datePicker.setFixedSize(QSize(130, 20))
         rightCol.addWidget(datePicker)
 
         # third row
         labelDesc = QLabel("Item Description:")
-        labelDesc.setFixedSize(QSize(150, 20))
+        labelDesc.setFixedSize(QSize(130, 20))
         leftCol.addWidget(labelDesc)
         commentField = QLineEdit()
-        commentField.setFixedSize(QSize(150, 20))
+        commentField.setFixedSize(QSize(130, 20))
         rightCol.addWidget(commentField)
 
         # fourth row
         addItemButton = QPushButton("Add To List")
-        addItemButton.setFixedSize(QSize(150, 20))
+        addItemButton.setFixedSize(QSize(130, 20))
         leftCol.addWidget(addItemButton)
         exitAddItem = QPushButton("Exit")
-        exitAddItem.setFixedSize(QSize(150, 20))
+        exitAddItem.setFixedSize(QSize(130, 20))
         rightCol.addWidget(exitAddItem)
 
         # init dialog layout
