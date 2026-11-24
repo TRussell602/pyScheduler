@@ -17,7 +17,6 @@ from PyQt5.QtGui import QBrush, QPen, QColor, QFont
 
 # QApplication is application object, holds event loop
 # QWidget is the basic control class
-# QDialog is a simple dialog/window class
 # QVBoxLayout used for setting window vertical layout
 # QHBoxLayout used for setting window horizontal layout
 # QGraphicsScene is a region where graphics are rendered
@@ -30,7 +29,7 @@ from PyQt5.QtGui import QBrush, QPen, QColor, QFont
 # QListView is a control that displays a list of items organised in a column
 from PyQt5.QtWidgets import (
     QApplication, 
-    QWidget, QDialog,
+    QWidget,
     QVBoxLayout, QHBoxLayout,
     QGraphicsScene, QGraphicsView, QGraphicsLineItem, QGraphicsRectItem,
     QPushButton, QLabel, QLineEdit, QDateTimeEdit, QListView
@@ -202,13 +201,25 @@ class itemListDlg(QWidget):
         self.setWindowTitle("Item List")
         self.setFixedSize(481, 356)
 
-        # create local horizontal layout
+        # create local vertical layout
         itemListVBox = QVBoxLayout(self)
+
+        # create horizontal layout for the two buttons
+        buttonHBox = QHBoxLayout(self)
 
         # create add items button
         addItemButton = QPushButton("Add Items")
-        addItemButton.setFixedSize(QSize(75, 24))
+        addItemButton.setFixedSize(QSize(80, 24))
         addItemButton.clicked.connect(self.addItems)
+
+        # create button for manually saving class/dates
+        saveButton = QPushButton("Save Changes")
+        saveButton.setFixedSize(QSize(80, 24))
+        saveButton.clicked.connect(self.saveChanges)
+
+        # set button layout
+        buttonHBox.addWidget(addItemButton)
+        buttonHBox.addWidget(saveButton)
 
         # preset string list model for demonstrating the QListView
         strings = ("Junk Class Name : 2026/10/26 12:00AM : This is one possible format", 
@@ -221,7 +232,7 @@ class itemListDlg(QWidget):
         itemList.setModel(listModel)
 
         # init dialog display
-        itemListVBox.addWidget(addItemButton)
+        itemListVBox.addLayout(buttonHBox)
         itemListVBox.addWidget(itemList)
         self.setLayout(itemListVBox)
 
@@ -229,6 +240,11 @@ class itemListDlg(QWidget):
     def addItems(self):
         self.addItems = AddItemsDlg()
         self.addItems.show()
+
+    # saves additions, edits and deletions of dates/classes
+    # note: currently does nothing as of yet
+    def saveChanges(self):
+        print("Nothing to save yet")
 
 class AddItemsDlg(QWidget):
     def __init__(self):
