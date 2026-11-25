@@ -6,8 +6,10 @@ import time
 # Qt holds Qt namespace constants
 # constants so far used for color and box layout alignment
 # QSize class holds width & height ints
+# QDate holds a date, so far used to initialize a QDateTimeEdit
 # QStringListModel contains a list of strings formatted so that a QListView can display them
-from PyQt5.QtCore import Qt, QSize, QStringListModel
+# pyqtSignal is used for creating custom messages (event-responses)
+from PyQt5.QtCore import Qt, QSize, QDate, QStringListModel#, pyqtSignal
 
 # QBrush used to color in selected regions
 # QPen used for drawing lines and outlines
@@ -37,6 +39,12 @@ from PyQt5.QtWidgets import (
 
 # custom main window class used to host a QGraphicsScene, can host other controls
 class MainWindow(QWidget):
+
+    # localtime() returns a struct_time object
+    # if input is none, returns the exact local time
+    # the important struct_time members are tm_year, tm_mon, tm_mday, tm_wday (Monday is 0)
+    currentDate = time.localtime()
+
     def __init__(self):
         # inherit base class members
         super().__init__()
@@ -63,11 +71,6 @@ class MainWindow(QWidget):
         topRowBox.addWidget(itemListButton, 20)
         topRowBox.addStretch(33)
 
-        # localtime() returns a struct_time object
-        # if input is none, returns the exact local time
-        # the important struct_time members are tm_year, tm_mon, tm_mday, tm_wday (Monday is 0)
-        currentDate = time.localtime()
-
         self.monthNameMap = ( "January", "February", "March", "April", "May", "June",
                         "July", "August", "September", "October", "November", "December")
         self.monthNumDaysMap = (31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31)
@@ -78,7 +81,7 @@ class MainWindow(QWidget):
         font.setPointSizeF(9)
 
         #create month label and add it to horizontal layout
-        monthLabel = QLabel(self.monthNameMap[currentDate.tm_mon - 1])
+        monthLabel = QLabel(self.monthNameMap[self.currentDate.tm_mon - 1])
         monthLabel.setFont(font)
         topRowBox.addWidget(monthLabel, 47)
 
@@ -146,14 +149,14 @@ class MainWindow(QWidget):
             self.scene.addItem(line)
 
         # set weekday to follow anglosphere ordering
-        weekday = currentDate.tm_wday
+        weekday = self.currentDate.tm_wday
         if (weekday == 6): 
             weekday = 0
         else:
             weekday += 1
 
         # find weekday of first day of month
-        dayColumn = currentDate.tm_mday % 7
+        dayColumn = self.currentDate.tm_mday % 7
         if (dayColumn != 1):
             if (dayColumn == 0):
                 dayColumn = 6
@@ -167,7 +170,7 @@ class MainWindow(QWidget):
         # add day numbers
         dayNumX = DAY_WIDTH / 100 * 88
         dayNumY = DAY_LABEL_HEIGHT
-        numDays = self.monthNumDaysMap[currentDate.tm_mon - 1]
+        numDays = self.monthNumDaysMap[self.currentDate.tm_mon - 1]
         for day in range(1, numDays + 1):
             if (day == 10):
                 dayNumX = DAY_WIDTH / 100 * 80
@@ -191,9 +194,28 @@ class MainWindow(QWidget):
     # opens item list dialog
     def itemList(self):
         self.dlg = itemListDlg()
+        self.dlg.setWindowModality(Qt.ApplicationModal)
+        #self.dlg.closeMsg.connect(self.onItemListClosed) # used for receiving msg from child
         self.dlg.show()
 
+    #def onItemListClosed(self):
+        #self.drawCalendar()
+    
+    # event handler for the main window
+    # since it is called so frequently, it is used to track the current date
+    def event(self, e):
+        
+        # update current date if necessary
+        if (self.currentDate.tm_mday != time.localtime().tm_mday): 
+            self.currentDate.tm_mday = time.localtime()
+
+        # handle events
+        return super().event(e)
+
 class itemListDlg(QWidget):
+#    currently unused
+#    closeMsg = pyqtSignal()
+
     def __init__(self):
         super().__init__() # import base class members
 
@@ -205,20 +227,18 @@ class itemListDlg(QWidget):
         itemListVBox = QVBoxLayout(self)
 
         # create horizontal layout for the two buttons
-        buttonHBox = QHBoxLayout(self)
+        buttonHBox = QHBoxLayout()
 
         # create add items button
         addItemButton = QPushButton("Add Items")
         addItemButton.setFixedSize(QSize(80, 24))
         addItemButton.clicked.connect(self.addItems)
+        buttonHBox.addWidget(addItemButton)
 
         # create button for manually saving class/dates
         saveButton = QPushButton("Save Changes")
         saveButton.setFixedSize(QSize(80, 24))
         saveButton.clicked.connect(self.saveChanges)
-
-        # set button layout
-        buttonHBox.addWidget(addItemButton)
         buttonHBox.addWidget(saveButton)
 
         # preset string list model for demonstrating the QListView
@@ -239,12 +259,18 @@ class itemListDlg(QWidget):
     # opens add items dialog
     def addItems(self):
         self.addItems = AddItemsDlg()
+        self.addItems.setWindowModality(Qt.ApplicationModal)
         self.addItems.show()
 
     # saves additions, edits and deletions of dates/classes
     # note: currently does nothing as of yet
     def saveChanges(self):
         print("Nothing to save yet")
+
+# proof of concept for propagating messages between dialogs
+#    def closeEvent(self, QCloseEvent):
+#        self.closeMsg.emit()
+#        super().closeEvent(QCloseEvent)
 
 class AddItemsDlg(QWidget):
     def __init__(self):
@@ -273,7 +299,8 @@ class AddItemsDlg(QWidget):
         labelDate = QLabel("Date:")
         labelDate.setFixedSize(QSize(130, 20))
         leftCol.addWidget(labelDate)
-        datePicker = QDateTimeEdit()
+        presentDate = time.localtime() # default to current date
+        datePicker = QDateTimeEdit(QDate(presentDate.tm_year, presentDate.tm_mon, presentDate.tm_mday))
         datePicker.setFixedSize(QSize(130, 20))
         rightCol.addWidget(datePicker)
 
