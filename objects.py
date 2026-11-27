@@ -1,8 +1,11 @@
 
 class Task:
-    def __init__(self, name, desc):
+    def __init__(self, name, desc, start_time, end_time, do_by):
         self.name = name
         self.desc = desc
+        self.start_time = start_time
+        self.end_time = end_time
+        self.do_by = do_by
         self.prev = None
         self.next = None
 
@@ -12,6 +15,8 @@ class Course:
         self.name = name
         self.head = None
         self.tail = None
+        self.prev = None
+        self.next = None
 
     def add_task(self, task):
 
