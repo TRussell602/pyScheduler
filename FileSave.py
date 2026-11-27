@@ -14,10 +14,20 @@ class SaveFile:
 
     # used to save the data about Courses and their tasks every time one of them is updated.
     # takes a list of course as input nad returns null.
-    def save(self, Course_list): # we may need an object that holds multiple courses
+    def save(self, course_list: Courselist): # we may need an object that holds multiple courses
         # writes the course and task data into a test file
         with open(self.file, 'w') as save_file:
-            counter = 0
+            temp = course_list
+            # 
+            while temp.head != None:
+                save_file.write(temp.head.code, '/ ', temp.head.name, '/ ')
+                task = temp.head.head
+                while task != None:
+                    save_file.write(task.name, ', ', task.desc, ', ', task.start, ', ', task.end)
+                    if task.next != None:
+                        save_file.write('+ ')
+                    task = task.next
+                
             
 
         return
@@ -28,19 +38,21 @@ class SaveFile:
         # reads from a text file and changes it into courses and their corresponding tasks
         course_list = Courselist()
         with open(self.file, 'r') as save_file:
+            # if file does not exsists return a emty course list.
             if not save_file:
                 return course_list
             else:
                 i = 0
                 course_tasks = None
                 file_content = save_file.read()
-                
+                # split up the file into nested lists
                 course_temp_list = [x.split('/ ') for x in file_content.split('&')]
                 while i < len(course_temp_list):
                     course_tasks[i] = [x.split(', ') for x in course_temp_list[i][2].split('+ ')]
                     i += 1
                 n = 0
                 i = 0
+                # takes the nested lists and uses it to make a Courselist object
                 while n < len(course_temp_list):
                     temp = Course(course_temp_list[n][0], course_temp_list[n][1])
                     while i < len(course_tasks):
