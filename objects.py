@@ -70,5 +70,23 @@ class Course:
 
         return False
 
-        
+class Courselist:
+    def __init__(self):
+        self.head = None
+        self.tail = None
+
+    def add_task(self, course):
+
+        # If the list is empty
+        if self.head == None:
+            self.head = course
+            self.tail = course
+
+        else:
+            # Connect the new task to the end
+            self.tail.next = course
+            course.prev = self.tail
+
+            # Update the tail
+            self.tail = course     
 
